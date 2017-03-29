@@ -174,8 +174,7 @@ class GooglePhotosMedia(object):
 
 class GooglePhotosSync(object):
 
-    GOOGLE_PHOTO_FOLDER_QUERY = (
-        'title = "Google Photos" and "root" in parents and trashed=false')
+    GOOGLE_PHOTO_FOLDER_QUERY = ('trashed=false')
     MEDIA_QUERY = '"%s" in parents and trashed=false'
     PAGE_SIZE = 100
 
@@ -191,12 +190,13 @@ class GooglePhotosSync(object):
         self.gauth.settings["save_credentials"] = True
         self.gauth.settings["save_credentials_backend"] = "file"
         self.gauth.settings["get_refresh_token"] = True
+        self.gauth.settings["oauth_scope"] = "https://www.googleapis.com/auth/drive.photos.readonly"
         self.gauth.CommandLineAuth()
         self.googleDrive = GoogleDrive(self.gauth)
 
     def _get_photos_folder_id(self):
         query_results = self.googleDrive.ListFile(
-            {"q": GooglePhotosSync.GOOGLE_PHOTO_FOLDER_QUERY}).GetList()
+            {"spaces": 'photos'}).GetList()
         try:
             return query_results[0]["id"]
         except:
@@ -205,7 +205,7 @@ class GooglePhotosSync(object):
     def get_remote_medias(self):
         googlePhotosFolderId = self._get_photos_folder_id()
         query_params = {
-            "q": GooglePhotosSync.MEDIA_QUERY % googlePhotosFolderId,
+            "spaces" : "photos",
             "maxResults": GooglePhotosSync.PAGE_SIZE
         }
         for page_results in self.googleDrive.ListFile(query_params):
